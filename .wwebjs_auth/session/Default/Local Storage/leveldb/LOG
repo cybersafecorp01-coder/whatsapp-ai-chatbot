@@ -1,3 +1,6 @@
-2026/01/19-17:48:50.513 1570 Reusing MANIFEST C:\Users\leand\Documents\GitHub\whatsapp-ai-chatbot\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
-2026/01/19-17:48:50.518 1570 Recovering log #3
-2026/01/19-17:48:50.520 1570 Reusing old log C:\Users\leand\Documents\GitHub\whatsapp-ai-chatbot\.wwebjs_auth\session\Default\Local Storage\leveldb/000003.log 
+2026/01/20-12:32:41.053 2110 Reusing MANIFEST C:\Users\leand\Documents\GitHub\whatsapp-ai-chatbot\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
+2026/01/20-12:32:41.058 2110 Recovering log #3
+2026/01/20-12:32:41.060 2110 Reusing old log C:\Users\leand\Documents\GitHub\whatsapp-ai-chatbot\.wwebjs_auth\session\Default\Local Storage\leveldb/000003.log 
+2026/01/20-12:35:41.650 2618 Level-0 table #5: started
+2026/01/20-12:35:41.655 2618 Level-0 table #5: 18235 bytes OK
+2026/01/20-12:35:41.657 2618 Delete type=0 #3
