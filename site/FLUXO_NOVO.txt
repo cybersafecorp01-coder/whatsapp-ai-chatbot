@@ -1,0 +1,364 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                   NOVO FLUXO DE RESERVA + PAGAMENTO                           ║
+║                        COM CONFIRMAÇÃO DE EMAIL + WHATSAPP                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+🎯 RESUMO DO NOVO FLUXO
+════════════════════════════════════════════════════════════════════════════════
+
+O cliente agora faz TUDO em um único fluxo, sem criar conta:
+1. Seleciona quarto e datas
+2. Preenche dados pessoais
+3. Vai para pagamento
+4. Após pagamento confirmado → RESERVA criada + EMAIL + WHATSAPP
+
+════════════════════════════════════════════════════════════════════════════════
+
+📍 PASSO 1: CLIENTE ACESSA RESERVA
+────────────────────────────────────────────────────────────────────────────────
+
+URL: http://localhost/Mona/site/pages/reserva.php
+
+O quê acontece:
+✓ Cliente seleciona um quarto
+✓ JavaScript carrega datas disponíveis via AJAX
+✓ Cliente seleciona check-in e check-out (apenas datas disponíveis)
+✓ Resumo de preço aparece automaticamente
+✓ Cliente preenche dados pessoais:
+  - Nome completo
+  - Email
+  - Telefone (com máscara)
+  - CPF (com máscara)
+  - Quantidade de hóspedes
+  - Notas especiais (opcional)
+
+Arquivo: pages/reserva.php
+════════════════════════════════════════════════════════════════════════════════
+
+📍 PASSO 2: SUBMISSÃO DO FORMULÁRIO
+────────────────────────────────────────────────────────────────────────────────
+
+Quando cliente clica "Confirmar Reserva":
+
+POST para: api/do-reserve.php
+
+O quê acontece:
+✓ Valida todos os dados
+✓ Valida email com filter_var()
+✓ Verifica se datas estão disponíveis no BD
+✓ Calcula o valor total (dias × preço/noite)
+✓ IMPORTANTE: NÃO cria a reserva no banco de dados ainda!
+✓ Armazena dados na SESSÃO: $_SESSION['dados_reserva']
+✓ Redireciona para: pages/pagamento.php
+
+Dados armazenados na sessão:
+- quarto_id
+- nome_cliente
+- email_cliente
+- telefone_cliente
+- cpf_cliente
+- data_checkin
+- data_checkout
+- quantidade_hospedes
+- valor_total
+- notas
+- status (= 'pendente')
+- quarto_nome
+- quarto_preco
+
+Arquivo: api/do-reserve.php
+════════════════════════════════════════════════════════════════════════════════
+
+📍 PASSO 3: PÁGINA DE PAGAMENTO
+────────────────────────────────────────────────────────────────────────────────
+
+URL: pages/pagamento.php
+
+O quê acontece:
+✓ Verifica se há dados na sessão
+✓ Exibe resumo da reserva com dados do cliente
+✓ Formulário para dados do cartão:
+  - Nome do titular
+  - Número do cartão (com máscara)
+  - Validade (com máscara)
+  - CVV
+  - Banco
+
+Arquivo: pages/pagamento.php
+════════════════════════════════════════════════════════════════════════════════
+
+📍 PASSO 4: PROCESSAMENTO DO PAGAMENTO
+────────────────────────────────────────────────────────────────────────────────
+
+Quando cliente clica "Confirmar Pagamento":
+
+POST para: api/process-payment.php
+
+O quê acontece:
+
+1️⃣ Valida dados do cartão
+2️⃣ Recupera dados da sessão ($_SESSION['dados_reserva'])
+3️⃣ Envia para ASAAS (api/payment.php → criarCobranca())
+4️⃣ AGUARDA resposta do ASAAS
+
+SE PAGAMENTO BEM-SUCEDIDO:
+   ✅ Cria a reserva NO BANCO DE DADOS com status 'confirmada'
+   ✅ Busca dados completos da reserva criada
+   ✅ Envia EMAIL de confirmação via Resend API
+   ✅ Envia WHATSAPP de confirmação
+   ✅ Limpa dados da sessão
+   ✅ Redireciona para: pages/sucesso.php?reserva_id=123
+
+SE PAGAMENTO FALHOU:
+   ❌ NÃO cria nada no banco de dados
+   ❌ Redireciona de volta para pagamento.php com erro
+   ❌ Cliente pode tentar novamente
+
+Arquivo: api/process-payment.php
+════════════════════════════════════════════════════════════════════════════════
+
+📍 PASSO 5: PÁGINA DE SUCESSO
+────────────────────────────────────────────────────────────────────────────────
+
+URL: pages/sucesso.php?reserva_id=123
+
+O quê aparece:
+✓ Ícone de sucesso (check verde)
+✓ Mensagem "Reserva Confirmada!"
+✓ Todos os detalhes da reserva
+✓ Próximas etapas
+✓ Dados de contato do hotel
+✓ Botões para voltar ao início ou abrir WhatsApp
+
+Arquivo: pages/sucesso.php
+════════════════════════════════════════════════════════════════════════════════
+
+📧 EMAIL DE CONFIRMAÇÃO
+────────────────────────────────────────────────────────────────────────────────
+
+Enviado via: Resend API
+Para: email_cliente (fornecido no formulário)
+
+Conteúdo:
+- Número da reserva
+- Quarto reservado
+- Datas de check-in e check-out
+- Valor total pago
+- Horários (14:00 check-in, 11:00 check-out)
+- Informações importantes
+- Contato do hotel
+
+Classe: includes/email.php
+Método: enviarConfirmacaoReserva()
+════════════════════════════════════════════════════════════════════════════════
+
+💬 WHATSAPP DE CONFIRMAÇÃO
+────────────────────────────────────────────────────────────────────────────────
+
+Enviado para: telefone_cliente (fornecido no formulário)
+Método: Link do WhatsApp (abre automático no celular do cliente)
+
+Conteúdo:
+- ✅ Reserva Confirmada
+- 🏨 Nome do quarto
+- 📅 Datas de check-in e check-out
+- 🛏️ Quantidade de hóspedes
+- 💰 Valor total
+- 🌙 Quantidade de noites
+- 🔢 Número da reserva
+
+Classe: includes/whatsapp.php
+Método: enviarConfirmacaoReserva()
+════════════════════════════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA - FLUXO NÃO-AUTENTICADO
+────────────────────────────────────────────────────────────────────────────────
+
+Perguntas de segurança:
+
+1. E se o cliente não completar o pagamento?
+   → Dados ficam na sessão
+   → Se session expirar (padrão: 24 min), dados são perdidos
+   → Cliente pode voltar e começar novamente
+
+2. E se alguém tente acessar pagamento.php sem fazer reserva?
+   → Verifica if (!isset($_SESSION['dados_reserva']))
+   → Redireciona para reserva.php com erro
+
+3. E se alguém manipular os dados da sessão?
+   → São validados novamente no process-payment.php
+   → Email é verificado com filter_var()
+   → Datas são verificadas no banco de dados
+
+4. Dados sensíveis (cartão)?
+   → Enviados DIRETO para ASAAS via HTTPS/SSL
+   → NUNCA armazenados no servidor
+   → Apenas referência de pagamento fica no BD
+
+════════════════════════════════════════════════════════════════════════════════
+
+📊 BANCO DE DADOS - TABELA RESERVAS
+────────────────────────────────────────────────────────────────────────────────
+
+Estrutura ATUALIZADA:
+
+CREATE TABLE reservas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    quarto_id INT NOT NULL,
+    nome_cliente VARCHAR(255) NOT NULL,
+    email_cliente VARCHAR(255) NOT NULL,
+    telefone_cliente VARCHAR(20),
+    cpf_cliente VARCHAR(20),
+    data_checkin DATE NOT NULL,
+    data_checkout DATE NOT NULL,
+    quantidade_hospedes INT DEFAULT 1,
+    valor_total DECIMAL(10, 2) NOT NULL,
+    status ENUM('pendente', 'confirmada', 'cancelada') DEFAULT 'pendente',
+    metodo_pagamento VARCHAR(50),
+    referencia_pagamento VARCHAR(255),
+    notas TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (quarto_id) REFERENCES quartos(id) ON DELETE CASCADE
+)
+
+Campos removidos:
+   ❌ usuario_id (não é mais necessário)
+
+Campos adicionados:
+   ✅ nome_cliente
+   ✅ email_cliente
+   ✅ telefone_cliente
+   ✅ cpf_cliente
+
+════════════════════════════════════════════════════════════════════════════════
+
+🚀 COMO TESTAR
+────────────────────────────────────────────────────────────────────────────────
+
+1. RECRIAR O BANCO DE DADOS
+   Acesse: http://localhost/Mona/site/includes/migrations.php?migrate=1
+   (Necessário porque alterou a estrutura da tabela reservas)
+
+2. ACESSAR A HOME
+   http://localhost/Mona/site/
+
+3. CLICAR EM "RESERVAR"
+   Vai para: pages/reserva.php
+
+4. SELECIONAR UM QUARTO
+   Se não houver datas disponíveis, será exibido erro
+   (Admin deve adicionar datas em admin/quartos.php)
+
+5. SELECIONAR DATAS DISPONÍVEIS
+   Se houver datas no BD, aparecerão nos dropdowns
+
+6. PREENCHER DADOS PESSOAIS
+   - Nome
+   - Email (válido para teste)
+   - Telefone (com máscara)
+   - CPF (com máscara)
+
+7. CLICAR "CONFIRMAR RESERVA"
+   Vai para: pages/pagamento.php
+
+8. PREENCHER DADOS DO CARTÃO
+   ⚠️  OBS: Isso irá TENTAR fazer pagamento real via ASAAS
+   Para modo TESTE: Use chave de teste do ASAAS em .env
+
+9. CLICAR "CONFIRMAR PAGAMENTO"
+   Se pagamento bem-sucedido:
+   → Reserva criada no BD
+   → Email enviado
+   → WhatsApp enviado
+   → Redireciona para sucesso.php
+
+════════════════════════════════════════════════════════════════════════════════
+
+⚙️ CONFIGURAÇÃO NECESSÁRIA
+────────────────────────────────────────────────────────────────────────────────
+
+Arquivo: .env
+
+Variáveis OBRIGATÓRIAS para funcionar:
+
+1. RESEND_API_KEY
+   Para enviar emails
+   Obtenha em: https://resend.com
+
+2. ASAAS_API_KEY
+   Para processar pagamentos
+   Obtenha em: https://asaas.com
+   Modo sandbox (teste) ou production
+
+3. HOTEL_PHONE
+   Número de telefone do hotel para contato
+
+4. HOTEL_EMAIL
+   Email para contato do hotel
+
+5. HOTEL_WHATSAPP (opcional)
+   Número de WhatsApp do hotel
+
+════════════════════════════════════════════════════════════════════════════════
+
+🔄 FLUXO VISUAL
+────────────────────────────────────────────────────────────────────────────────
+
+HOME
+  ↓ clica "Reservar"
+RESERVA.PHP
+  ↓ preenche dados + seleciona datas
+API/DO-RESERVE.PHP
+  ↓ valida + armazena na sessão
+PAGAMENTO.PHP
+  ↓ preenche dados do cartão
+API/PROCESS-PAYMENT.PHP
+  ├─→ ASAAS (verifica pagamento)
+  ├─→ SE OK:
+  │     ├─→ Cria reserva no BD
+  │     ├─→ Resend API (envia email)
+  │     ├─→ WhatsApp API (envia msg)
+  │     └─→ SUCESSO.PHP
+  └─→ SE FALHA:
+        └─→ PAGAMENTO.PHP com erro
+
+════════════════════════════════════════════════════════════════════════════════
+
+📝 ARQUIVOS MODIFICADOS
+────────────────────────────────────────────────────────────────────────────────
+
+✅ pages/reserva.php          - Novo fluxo sem login
+✅ pages/pagamento.php        - Usa sessão em vez de BD
+✅ pages/sucesso.php          - Página de confirmação
+✅ api/do-reserve.php         - Armazena na sessão
+✅ api/process-payment.php    - Cria reserva após pagamento
+✅ api/get-datas-disponiveis.php - Endpoint para carregar datas
+✅ includes/email.php         - Atualizado método
+✅ includes/whatsapp.php      - Novo arquivo
+✅ includes/migrations.php    - Alterou tabela reservas
+✅ .env                       - Novas variáveis
+
+════════════════════════════════════════════════════════════════════════════════
+
+💡 DICAS
+────────────────────────────────────────────────────────────────────────────────
+
+1. Para adicionar datas:
+   Login como admin → admin/quartos.php → "Adicionar Datas Disponíveis"
+
+2. Para testar email:
+   Coloque seu email no formulário de reserva
+
+3. Para testar WhatsApp:
+   Coloque um número válido no formulário
+
+4. Para DEBUG:
+   Ative DEBUG=true no .env
+   Verifique logs em error_log()
+
+5. Chaves de teste ASAAS:
+   Crie conta em: https://sandbox.asaas.com (para teste)
+   Use a chave de sandbox no .env
+
+════════════════════════════════════════════════════════════════════════════════

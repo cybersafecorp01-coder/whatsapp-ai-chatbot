@@ -1,0 +1,146 @@
+🎯 GUIA RÁPIDO DE ACESSO - MONÃ HOTEL
+════════════════════════════════════════════════════════════════════════════
+
+📱 SITE PRINCIPAL
+└─ http://localhost/Mona/site/
+
+   Páginas Principais:
+   ✓ Home: http://localhost/Mona/site/pages/home.php
+   ✓ Reservar: http://localhost/Mona/site/pages/reserva.php
+
+════════════════════════════════════════════════════════════════════════════
+
+🔐 ADMIN PANEL
+└─ http://localhost/Mona/site/admin/login.php
+
+   Credenciais Padrão:
+   📧 Email: admin@monã.com
+   🔑 Senha: admin123
+   
+   ⚠️ IMPORTANTE: Mude a senha após primeiro login!
+
+════════════════════════════════════════════════════════════════════════════
+
+🛠️ CONFIGURAÇÃO INICIAL
+└─ Necessário fazer uma única vez:
+
+   1️⃣ Recriar Banco de Dados:
+      http://localhost/Mona/site/includes/migrations.php?migrate=1
+
+   2️⃣ Configurar .env (arquivo na raiz do site)
+      ASAAS_API_KEY=sua_chave_aqui
+      RESEND_API_KEY=sua_chave_aqui
+      HOTEL_PHONE=(11) 3000-0000
+      HOTEL_EMAIL=reservas@monã.com
+
+   3️⃣ Adicionar Datas Disponíveis:
+      Admin → Quartos → Adicionar Datas Disponíveis
+
+════════════════════════════════════════════════════════════════════════════
+
+✅ TESTES VALIDADOS
+════════════════════════════════════════════════════════════════════════════
+
+✓ Telefone com formato correto
+  Válidos: (11) 99999-9999 ou (11) 3000-0000
+  Teste: 10-11 dígitos com DDD
+
+✓ CPF com validação completa
+  Válido: 121.211.111-11
+  Rejeita sequências iguais (11111111111)
+  Valida dígitos verificadores
+
+✓ Admin login funcionando
+  Email: admin@monã.com
+  Senha: admin123
+
+✓ Redirecionamento seguro
+  /admin/ → /admin/login.php
+  Sem login → não acessa dashboard
+
+✓ Logout funcionando
+  http://localhost/Mona/site/admin/logout.php
+
+════════════════════════════════════════════════════════════════════════════
+
+📊 FLUXO DE RESERVA COMPLETO
+════════════════════════════════════════════════════════════════════════════
+
+1. Cliente acessa: pages/reserva.php
+2. Seleciona: Quarto + Datas + Dados Pessoais
+3. Clica: "Confirmar Reserva" → api/do-reserve.php
+   ✓ Valida telefone (10-11 dígitos)
+   ✓ Valida CPF (11 dígitos + dígitos verificadores)
+   ✓ Armazena na SESSION (não no BD ainda)
+4. Redireciona: pages/pagamento.php
+5. Cliente preenche: Dados do cartão
+6. Clica: "Confirmar Pagamento" → api/process-payment.php
+7. ASAAS processa pagamento
+8. Se SUCESSO:
+   ✓ Cria reserva no BD
+   ✓ Envia email de confirmação
+   ✓ Envia WhatsApp
+   ✓ Mostra: pages/sucesso.php
+9. Se FALHA:
+   ✓ Volta para pagamento.php
+   ✓ Mostra mensagem de erro
+
+════════════════════════════════════════════════════════════════════════════
+
+🗂️ ESTRUTURA DE ARQUIVOS PRINCIPAIS
+════════════════════════════════════════════════════════════════════════════
+
+site/
+├── admin/
+│   ├── index.php          (Dashboard - requer login)
+│   ├── login.php          (Login do admin) ✨ NOVO
+│   ├── logout.php         (Sair do admin) ✨ NOVO
+│   ├── quartos.php        (Gerenciar quartos)
+│   ├── reservas.php       (Gerenciar reservas)
+│   └── clientes.php       (Listar clientes)
+├── api/
+│   ├── do-reserve.php     (Cria reserva na sessão) ✏️ ATUALIZADO
+│   ├── process-payment.php (Processa pagamento)
+│   └── get-datas-disponiveis.php (Carrega datas)
+├── pages/
+│   ├── reserva.php        (Formulário de reserva) ✏️ ATUALIZADO
+│   ├── pagamento.php      (Formulário de pagamento)
+│   ├── sucesso.php        (Confirmação)
+│   └── home.php           (Página inicial)
+├── includes/
+│   ├── db.php             (Conexão BD)
+│   ├── email.php          (Enviar emails)
+│   ├── whatsapp.php       (Enviar WhatsApp) ✏️ ATUALIZADO
+│   └── migrations.php     (Criar tabelas)
+├── .env                   (Configuração) ✏️ ATUALIZADO
+└── CORRECOES_REALIZADAS.txt (Detalhes técnicos) ✨ NOVO
+
+════════════════════════════════════════════════════════════════════════════
+
+🚀 PRÓXIMOS PASSOS
+════════════════════════════════════════════════════════════════════════════
+
+[ ] 1. Acessar: http://localhost/Mona/site/includes/migrations.php?migrate=1
+[ ] 2. Editar .env com credenciais reais
+[ ] 3. Fazer login em: http://localhost/Mona/site/admin/login.php
+[ ] 4. Adicionar datas disponíveis para os quartos
+[ ] 5. Testar fluxo completo de reserva + pagamento
+[ ] 6. Mudar senha padrão do admin
+[ ] 7. Gerar backup do banco de dados
+
+════════════════════════════════════════════════════════════════════════════
+
+📞 SUPORTE
+════════════════════════════════════════════════════════════════════════════
+
+Documentação Completa:
+- FLUXO_NOVO.txt - Explicação técnica do novo fluxo
+- RESUMO_FINAL.txt - Resumo visual do sistema
+- CORRECOES_REALIZADAS.txt - Detalhes das correções
+- CHECKLIST.md - Lista de verificação
+- SETUP.md - Guia de setup
+
+════════════════════════════════════════════════════════════════════════════
+
+✨ SISTEMA PRONTO PARA USO! 🎉
+════════════════════════════════════════════════════════════════════════════

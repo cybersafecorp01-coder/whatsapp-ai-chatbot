@@ -1,0 +1,111 @@
+✅ MUDANÇAS REALIZADAS - SISTEMA DE RESERVAS SEM AUTENTICAÇÃO
+================================================================
+
+1. REMOVER AUTENTICAÇÃO DE CLIENTES
+   ✓ Página de login (login.php) - REMOVIDA do fluxo público
+   ✓ Página de registro (registro.php) - REMOVIDA do fluxo público
+   ✓ Página de conta (minha-conta.php) - REMOVIDA do fluxo público
+   ✓ Logout (api/logout.php) - Mantido apenas para admin
+   ✓ Endpoints de autenticação (do-login.php, do-register.php) - Mantidos para admin apenas
+
+2. ATUALIZAR PÁGINA DE RESERVA (reserva.php)
+   ✓ Removida verificação de login obrigatório
+   ✓ Removidos botões de login/logout do navbar
+   ✓ Adicionado formulário de dados pessoais (nome, email, telefone, CPF)
+   ✓ Implementado sistema de seleção de datas disponíveis apenas (dropdowns dinâmicos)
+   ✓ Adicionado resumo de preço com cálculo de noites e total
+   ✓ Adicionado checkbox de aceitar termos
+   ✓ Implementado JavaScript para carregar datas via AJAX
+
+3. CRIAR ENDPOINT GET-DATAS-DISPONIVEIS (api/get-datas-disponiveis.php)
+   ✓ Retorna JSON com datas disponíveis para um quarto
+   ✓ Filtra datas a partir de hoje
+   ✓ Ordena datas em ordem crescente
+
+4. ATUALIZAR ENDPOINT DO-RESERVE (api/do-reserve.php)
+   ✓ Removida verificação de login
+   ✓ Adicionado campos: nome_cliente, email_cliente, telefone_cliente, cpf_cliente
+   ✓ Validação de email com filter_var
+   ✓ Validação de datas disponíveis antes de criar reserva
+   ✓ Redireciona para process-payment.php em vez de pagamento.php
+
+5. ATUALIZAR ENDPOINT PROCESS-PAYMENT (api/process-payment.php)
+   ✓ Removida verificação de login
+   ✓ Busca reserva sem exigir usuario_id
+   ✓ Usa dados de cliente armazenados na reserva
+
+6. ATUALIZAR PÁGINA PAGAMENTO (pages/pagamento.php)
+   ✓ Removida verificação de login
+   ✓ Busca reserva sem exigir usuario_id
+   ✓ Adicionado resumo com dados do cliente
+   ✓ Exibe nome, email, telefone do cliente
+
+7. ATUALIZAR HOME (pages/home.php)
+   ✓ Removidos links de login/logout
+   ✓ Corrigidos caminhos de links relativos
+
+8. ATUALIZAR BANCO DE DADOS (includes/migrations.php)
+   ✓ Removido campo usuario_id da tabela reservas
+   ✓ Adicionados campos: nome_cliente, email_cliente, telefone_cliente, cpf_cliente
+   ✓ Removidas constraints de foreign key para usuarios
+
+9. ADMIN - MANTÉM SISTEMA DE AUTENTICAÇÃO
+   ✓ Admin continua com login obrigatório (login.php)
+   ✓ Admin continua com sistema de usuários
+   ✓ Página clientes (clientes.php) - Mostra clientes de reservas
+
+10. SISTEMA DE DISPONIBILIDADES
+    ✓ Admin pode adicionar datas disponíveis em admin/quartos.php
+    ✓ Cliente vê apenas datas disponíveis ao fazer reserva
+    ✓ Datas passadas são filtradas automaticamente
+
+================================================================
+FLUXO DE RESERVA ATUALIZADO:
+================================================================
+
+CLIENTE:
+1. home.php → Clica "Reservar"
+2. reserva.php → Seleciona quarto
+3. JavaScript carrega datas via api/get-datas-disponiveis.php
+4. Cliente seleciona check-in e check-out (apenas datas disponíveis)
+5. Resumo de preço é exibido automaticamente
+6. Cliente preenche dados pessoais (nome, email, telefone, CPF)
+7. Cliente clica "Confirmar Reserva"
+8. POST para api/do-reserve.php
+   - Valida dados
+   - Valida se datas estão disponíveis
+   - Cria reserva sem usuario_id
+   - Redireciona para pagamento
+9. pagamento.php → Mostra resumo e formulário de cartão
+10. POST para api/process-payment.php
+    - Processa pagamento via ASAAS
+    - Atualiza status da reserva
+    - Envia email de confirmação
+
+ADMIN:
+1. admin/ → Dashboard (requer login como admin)
+2. admin/quartos.php → Gerencia quartos e adiciona datas disponíveis
+3. admin/reservas.php → Visualiza, confirma ou cancela reservas
+4. admin/configuracoes.php → Configura hotel e integrações
+
+================================================================
+OBSERVAÇÕES IMPORTANTES:
+================================================================
+
+1. Após atualizar o código, deve-se recriar o banco de dados
+   Acesse: http://localhost/Mona/site/includes/migrations.php?migrate=1
+
+2. Admin ainda usa login/senha em api/do-login.php e login.php
+   Email padrão: admin@monã.com
+   Senha padrão: admin123
+
+3. Clientes não precisam mais criar conta
+   Fazem reserva preenchendo dados pessoais no momento da reserva
+
+4. Dados do cliente são armazenados apenas na tabela reservas
+   Não há tabela usuarios com clientes
+
+5. Datas disponíveis são gerenciadas via admin/quartos.php
+   Admin adiciona datas mês a mês
+
+================================================================
